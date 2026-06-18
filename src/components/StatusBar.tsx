@@ -1,9 +1,7 @@
 'use client'
 
-import React from 'react'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
-import { Settings, Server, Circle, Wifi, WifiOff, AlertCircle, CheckCircle } from 'lucide-react'
+import { Settings, Circle, AlertCircle } from 'lucide-react'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { Button } from '@/components/ui/button'
 

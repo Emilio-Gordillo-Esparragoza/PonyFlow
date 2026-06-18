@@ -1,5 +1,6 @@
-import { invoke, listen } from '@tauri-apps/api/core'
-import { EngineEvent, Run, InputMessageType, AgentName, AgentStatus } from './protocol'
+import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
+import { EngineEvent, Run, InputMessageType } from './protocol'
 
 type EventCallback = (event: EngineEvent) => void
 
@@ -10,7 +11,7 @@ let unlistenCrashed: (() => void) | null = null
 
 export async function initEngine(callback: EventCallback) {
   eventCallback = callback
-  unlistenOutput = await listen<string>('python:output', (event) => {
+  unlistenOutput = await listen<string>('python:output', (event: { payload: string }) => {
     try {
       const parsed = JSON.parse(event.payload)
       eventCallback?.(parsed)
@@ -18,7 +19,7 @@ export async function initEngine(callback: EventCallback) {
       console.error('Failed to parse engine event:', event.payload)
     }
   })
-  unlistenError = await listen<string>('python:error', (event) => {
+  unlistenError = await listen<string>('python:error', (event: { payload: string }) => {
     console.error('Python stderr:', event.payload)
   })
   unlistenCrashed = await listen('python:crashed', () => {

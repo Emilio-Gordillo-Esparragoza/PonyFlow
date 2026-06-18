@@ -1,9 +1,8 @@
 'use client'
 
-import React from 'react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, X, ChevronRight } from 'lucide-react'
+import { Trash2, X } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Run } from '@/lib/protocol'
 import { useRunStore } from '@/stores/runStore'

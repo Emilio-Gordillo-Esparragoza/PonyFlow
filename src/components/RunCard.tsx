@@ -5,9 +5,8 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { CodeBlock } from './CodeBlock'
 import { AgentTrace } from './AgentTrace'
-import { ChevronDown, ChevronUp, Copy, AlertCircle, Shield } from 'lucide-react'
+import { ChevronDown, ChevronUp, AlertCircle, Shield } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Run } from '@/lib/protocol'
 
 interface RunCardProps {

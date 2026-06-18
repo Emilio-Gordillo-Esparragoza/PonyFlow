@@ -12,7 +12,7 @@ import { useEngine } from '@/hooks/useEngine'
 import { cn } from '@/lib/utils'
 
 export default function App() {
-  const { ollamaRunning, engineHealthy, isRunning, checkOllama, cancelRun } = useEngine()
+  const { ollamaRunning, engineHealthy, isRunning, checkOllama } = useEngine()
   const { runs, currentRunId, setCurrentRun } = useRunStore()
   const { theme } = useSettingsStore()
 

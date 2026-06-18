@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { initEngine, sendInput, getHealth, cleanup, updateRunWithEvent, EngineEvent } from '@/lib/engine'
+import { initEngine, sendInput, getHealth, cleanup, EngineEvent } from '@/lib/engine'
 import { useRunStore } from '@/stores/runStore'
 
 export function useEngine() {
@@ -10,7 +10,7 @@ export function useEngine() {
   const [isRunning, setIsRunning] = useState(false)
   const updateRun = useRunStore((s) => s.updateRun)
   const currentRunId = useRunStore((s) => s.currentRunId)
-  const healthCheckInterval = useRef<NodeJS.Timeout | null>(null)
+  const healthCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const handleEvent = useCallback((event: EngineEvent) => {
     if (currentRunId) {
@@ -49,7 +49,7 @@ export function useEngine() {
 
     return () => {
       cleanup()
-      healthCheckInterval.current && clearInterval(healthCheckInterval.current)
+      if (healthCheckInterval.current) clearInterval(healthCheckInterval.current)
     }
   }, [handleEvent])
 
