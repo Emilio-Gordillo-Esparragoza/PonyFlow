@@ -1,8 +1,9 @@
 import json
 from state import AgentState
 from utils.llm import create_llm
+from config import MODELS
 
-llm = create_llm("mistral")
+llm = create_llm(MODELS.reader)
 
 
 def reader(state: AgentState) -> dict:
@@ -14,5 +15,23 @@ def reader(state: AgentState) -> dict:
         "Output ONLY valid JSON."
     )
     result = llm.invoke(prompt)
-    data = json.loads(result.strip())
-    return {"review": result.strip(), "approved": data.get("approved", False)}
+    try:
+        data = json.loads(result.strip())
+        if "approved" not in data:
+            return {
+                "review": json.dumps(
+                    {
+                        "approved": False,
+                        "issues": ["Invalid reader output: missing approved"],
+                    }
+                ),
+                "approved": False,
+            }
+        return {"review": json.dumps(data), "approved": data.get("approved", False)}
+    except json.JSONDecodeError:
+        return {
+            "review": json.dumps(
+                {"approved": False, "issues": ["Invalid JSON from reader"]}
+            ),
+            "approved": False,
+        }

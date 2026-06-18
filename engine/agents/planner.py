@@ -1,8 +1,9 @@
 import json
 from state import AgentState
 from utils.llm import create_llm
+from config import MODELS
 
-llm = create_llm("mistral")
+llm = create_llm(MODELS.planner)
 
 
 def planner(state: AgentState) -> dict:
