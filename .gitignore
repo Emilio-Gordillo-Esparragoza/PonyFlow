@@ -1,6 +1,47 @@
-__pycache__/
-*.pyc
+# Dependencies
+node_modules/
+engine/__pycache__/
+engine/*.pyc
+engine/.ruff_cache/
+engine/.venv/
+engine/venv/
 .ruff_cache/
+
+# Build outputs
+dist/
+build/
+src-tauri/target/
+engine/dist/
+engine/build/
+*.spec
+
+# Tauri
+src-tauri/target/
+**/*.rs.bk
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
 .env
-venv/
-.venv/
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Python
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Tauri dev
+.tmp/

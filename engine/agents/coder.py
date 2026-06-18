@@ -1,10 +1,16 @@
+import sys
 from pathlib import Path
 from state import AgentState
 from utils.llm import create_llm
 
-llm = create_llm("llama3")
+llm = create_llm("llama3", streaming=True)
 
-PONYTAIL = Path(__file__).parent / "skills" / "ponytail.md"
+if getattr(sys, "frozen", False):
+    BASE = Path(sys._MEIPASS)
+else:
+    BASE = Path(__file__).parent.parent
+
+PONYTAIL = BASE / "engine" / "agents" / "skills" / "ponytail.md"
 
 
 def coder(state: AgentState) -> dict:
@@ -20,11 +26,18 @@ def coder(state: AgentState) -> dict:
         f"Previous review (if any): {state.get('review', 'none')}\n\n"
         "Write the Python code. Output ONLY the code, no explanation, no markdown."
     )
-    result = llm.invoke(prompt)
-    code = result.strip()
+
+    full_response = ""
+    for chunk in llm.stream(prompt):
+        full_response += chunk
+        yield {"type": "token", "agent": "coder", "content": chunk}
+
+    code = full_response.strip()
     if "```" in code:
         code = code.split("```")[1]
         if code.startswith("python"):
             code = code[6:]
         code = code.strip()
+
+    yield {"type": "agent_end", "agent": "coder", "output": code}
     return {"code": code}
