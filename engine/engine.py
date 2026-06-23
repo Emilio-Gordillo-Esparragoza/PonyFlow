@@ -8,12 +8,13 @@ from agents.planner import planner
 from agents.coder import coder
 from agents.tester import tester
 from agents.reader import reader
+from config import PIPELINE
 
 
-cancel_event = threading.Event()
+active_runs: dict[str, threading.Event] = {}
 
 
-def run_agent_cycle(state: AgentState, run_id: str):
+def run_agent_cycle(state: AgentState, run_id: str, cancel_event: threading.Event):
     yield {"type": "agent_start", "agent": "coder", "run_id": run_id}
     code_result = ""
     for event in coder(state):
@@ -26,6 +27,10 @@ def run_agent_cycle(state: AgentState, run_id: str):
     if code_result:
         state["code"] = code_result
 
+    if cancel_event.is_set():
+        yield {"type": "run_error", "run_id": run_id, "error": "Cancelled by user"}
+        return
+
     yield {"type": "agent_start", "agent": "tester", "run_id": run_id}
     test_result = tester(state)
     state.update(test_result)
@@ -35,6 +40,10 @@ def run_agent_cycle(state: AgentState, run_id: str):
         "output": state["test_result"],
         "run_id": run_id,
     }
+
+    if cancel_event.is_set():
+        yield {"type": "run_error", "run_id": run_id, "error": "Cancelled by user"}
+        return
 
     yield {"type": "agent_start", "agent": "reader", "run_id": run_id}
     reader_result = reader(state)
@@ -48,8 +57,8 @@ def run_agent_cycle(state: AgentState, run_id: str):
 
 
 def run_pipeline(prompt: str, run_id: str):
-    global cancel_event
-    cancel_event.clear()
+    cancel_event = threading.Event()
+    active_runs[run_id] = cancel_event
 
     state: AgentState = {
         "user_input": prompt,
@@ -72,7 +81,7 @@ def run_pipeline(prompt: str, run_id: str):
         "run_id": run_id,
     }
 
-    max_iterations = 3
+    max_iterations = PIPELINE.max_iterations
     while state.get("iterations", 0) < max_iterations:
         if cancel_event.is_set():
             yield {
@@ -80,16 +89,21 @@ def run_pipeline(prompt: str, run_id: str):
                 "run_id": run_id,
                 "error": "Cancelled by user",
             }
-            return
+            break
 
-        yield from run_agent_cycle(state, run_id)
+        yield from run_agent_cycle(state, run_id, cancel_event)
 
         test_ok = False
         try:
             test = json.loads(state.get("test_result", "{}"))
             test_ok = test.get("status") == "pass"
         except (json.JSONDecodeError, KeyError):
-            pass
+            yield {
+                "type": "run_error",
+                "run_id": run_id,
+                "error": "Invalid JSON in test_result",
+            }
+            break
 
         approved = state.get("approved", False)
         iterations = state.get("iterations", 0) + 1
@@ -109,7 +123,7 @@ def run_pipeline(prompt: str, run_id: str):
                     "iterations": state["iterations"],
                 },
             }
-            return
+            break
 
         if iterations >= max_iterations:
             yield {
@@ -125,7 +139,9 @@ def run_pipeline(prompt: str, run_id: str):
                     "iterations": state["iterations"],
                 },
             }
-            return
+            break
+
+    active_runs.pop(run_id, None)
 
 
 def print_cli_header():
@@ -145,9 +161,6 @@ def run_cli(prompt: str):
     print(f"Prompt: {prompt}\n")
 
     run_id = "cli-" + str(int(time.time() * 1000))
-    plan_output = ""
-    test_output = ""
-    review_output = ""
     approved = False
     iterations = 0
     final_code = ""
@@ -163,12 +176,10 @@ def run_cli(prompt: str):
             output = event.get("output", "")
 
             if agent == "planner":
-                plan_output = output
                 print_section("Planner")
                 print(output)
 
             elif agent == "tester":
-                test_output = output
                 print_section("Tester")
                 try:
                     test = json.loads(output)
@@ -182,7 +193,6 @@ def run_cli(prompt: str):
                     print(output)
 
             elif agent == "reader":
-                review_output = output
                 print_section("Reader")
                 try:
                     review = json.loads(output)
@@ -244,7 +254,9 @@ def main():
                 for event in run_pipeline(prompt, run_id):
                     print(json.dumps(event), flush=True)
             elif req.get("type") == "cancel":
-                cancel_event.set()
+                cancel_run_id = req.get("id", "")
+                if cancel_run_id in active_runs:
+                    active_runs[cancel_run_id].set()
         except json.JSONDecodeError:
             print(
                 json.dumps(

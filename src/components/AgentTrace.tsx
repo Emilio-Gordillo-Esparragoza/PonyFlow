@@ -2,8 +2,7 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
-import { ChevronDown, ChevronUp, Copy, FileText, Terminal } from 'lucide-react'
+import { FileText, Terminal } from 'lucide-react'
 import { AgentName, AgentStatus } from '@/lib/protocol'
 
 interface AgentTraceProps {
@@ -30,14 +29,7 @@ const STATUS_COLORS: Record<AgentStatus, string> = {
   error: 'bg-red-400',
 }
 
-const STATUS_LABELS: Record<AgentStatus, string> = {
-  pending: '⬜',
-  active: '🟡',
-  done: '✅',
-  error: '❌',
-}
-
-export function AgentTrace({ run, onCopyCode }: AgentTraceProps) {
+export function AgentTrace({ run, onCopyCode: _onCopyCode }: AgentTraceProps) {
   const [expanded, setExpanded] = React.useState<Record<AgentName, boolean>>({
     planner: false,
     coder: false,

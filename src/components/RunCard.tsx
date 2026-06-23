@@ -5,9 +5,8 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { CodeBlock } from './CodeBlock'
 import { AgentTrace } from './AgentTrace'
-import { ChevronDown, ChevronUp, Copy, AlertCircle, Shield } from 'lucide-react'
+import { ChevronDown, ChevronUp, AlertCircle, Shield } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Run } from '@/lib/protocol'
 
 interface RunCardProps {
@@ -18,8 +17,8 @@ interface RunCardProps {
 
 export function RunCard({ run, onCopyCode, isCurrent }: RunCardProps) {
   const [expanded, setExpanded] = React.useState(true)
-  const [showTest, setShowTest] = React.useState(false)
-  const [showReview, setShowReview] = React.useState(false)
+  const [_showTest, _setShowTest] = React.useState(false)
+  const [_showReview, _setShowReview] = React.useState(false)
 
   const getStatusBadge = () => {
     switch (run.status) {

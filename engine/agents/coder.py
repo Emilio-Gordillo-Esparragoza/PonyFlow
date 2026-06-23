@@ -1,16 +1,16 @@
 import sys
 from pathlib import Path
 from state import AgentState
-from utils.llm import create_llm
+from utils.llm import create_streaming_llm
+from config import MODELS
 
-llm = create_llm("llama3", streaming=True)
+llm = create_streaming_llm(MODELS.coder)
 
 if getattr(sys, "frozen", False):
     BASE = Path(sys._MEIPASS)
+    PONYTAIL = BASE / "engine" / "agents" / "skills" / "ponytail.md"
 else:
-    BASE = Path(__file__).parent.parent
-
-PONYTAIL = BASE / "engine" / "agents" / "skills" / "ponytail.md"
+    PONYTAIL = Path(__file__).parent / "skills" / "ponytail.md"
 
 
 def coder(state: AgentState) -> dict:

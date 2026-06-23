@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feat/**, feature/**]
+  pull_request:
+    branches: [main, feature/**]
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly integration test
+
+jobs:
+  python-lint-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install -r requirements.txt ruff pytest mypy
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Type check (mypy)
+        run: mypy . --ignore-missing-imports || true
+      - name: Unit tests
+        run: pytest -v
+
+  frontend-lint-build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: 'npm'
+      - name: Install deps
+        run: npm install
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm run test
+      - name: Build
+        run: npm run build
+
+  integration-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start Ollama
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          sleep 10
+          ollama pull llama3.2:1b
+          ollama pull phi3:mini
+      - name: Run CLI smoke test
+        working-directory: ./engine
+        run: |
+          pip install -r requirements.txt
+          timeout 120 python engine.py --cli "write a hello world function" 2>&1 | head -100
