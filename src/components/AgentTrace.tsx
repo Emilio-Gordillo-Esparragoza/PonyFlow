@@ -29,7 +29,7 @@ const STATUS_COLORS: Record<AgentStatus, string> = {
   error: 'bg-red-400',
 }
 
-export function AgentTrace({ run, onCopyCode }: AgentTraceProps) {
+export function AgentTrace({ run, onCopyCode: _onCopyCode }: AgentTraceProps) {
   const [expanded, setExpanded] = React.useState<Record<AgentName, boolean>>({
     planner: false,
     coder: false,

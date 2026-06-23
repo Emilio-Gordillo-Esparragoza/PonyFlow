@@ -17,8 +17,8 @@ interface RunCardProps {
 
 export function RunCard({ run, onCopyCode, isCurrent }: RunCardProps) {
   const [expanded, setExpanded] = React.useState(true)
-  const [showTest, setShowTest] = React.useState(false)
-  const [showReview, setShowReview] = React.useState(false)
+  const [_showTest, _setShowTest] = React.useState(false)
+  const [_showReview, _setShowReview] = React.useState(false)
 
   const getStatusBadge = () => {
     switch (run.status) {

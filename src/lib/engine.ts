@@ -2,6 +2,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { EngineEvent, Run, InputMessageType } from './protocol'
 
+export type { EngineEvent }
+
 type EventCallback = (event: EngineEvent) => void
 
 let eventCallback: EventCallback | null = null
