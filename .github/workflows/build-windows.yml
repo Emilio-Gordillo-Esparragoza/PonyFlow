@@ -62,7 +62,7 @@ jobs:
         working-directory: ./engine
         run: |
           pip install -r requirements.txt
-          pyinstaller ponyflow.spec
+          python -m pyinstaller ponyflow.spec
 
       - name: Build Frontend
         run: |
