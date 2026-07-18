@@ -12,6 +12,21 @@ def planner(state: AgentState) -> dict:
         "describing what code needs to be written. Output ONLY valid JSON, no other text.\n\n"
         f"User request: {state['user_input']}"
     )
+
+    prior_plan = state.get("plan") or ""
+    prior_code = state.get("code") or ""
+    prior_test = state.get("test_result") or ""
+    prior_review = state.get("review") or ""
+
+    if prior_plan or prior_code or prior_test or prior_review:
+        prompt += (
+            "\n\nPrevious attempt failed. Revise the plan to fix the problems below.\n"
+            f"Previous plan: {prior_plan or 'none'}\n"
+            f"Previous code: {prior_code or 'none'}\n"
+            f"Test result: {prior_test or 'none'}\n"
+            f"Review: {prior_review or 'none'}\n"
+        )
+
     result = llm.invoke(prompt)
     plan = result.strip()
     if "{" not in plan:

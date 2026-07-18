@@ -12,7 +12,6 @@ interface AgentTraceProps {
     iteration: number
     status: string
   }
-  onCopyCode: (code: string) => void
 }
 
 const AGENTS: { id: AgentName; label: string; icon: React.ReactNode }[] = [
@@ -29,7 +28,7 @@ const STATUS_COLORS: Record<AgentStatus, string> = {
   error: 'bg-red-400',
 }
 
-export function AgentTrace({ run, onCopyCode: _onCopyCode }: AgentTraceProps) {
+export function AgentTrace({ run }: AgentTraceProps) {
   const [expanded, setExpanded] = React.useState<Record<AgentName, boolean>>({
     planner: false,
     coder: false,

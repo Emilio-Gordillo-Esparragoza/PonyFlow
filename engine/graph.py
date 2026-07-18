@@ -18,4 +18,4 @@ def should_rework(state: AgentState) -> str:
     if iterations >= 3:
         return "end"
     state["iterations"] = iterations
-    return "coder"
+    return "planner"

@@ -17,8 +17,6 @@ interface RunCardProps {
 
 export function RunCard({ run, onCopyCode, isCurrent }: RunCardProps) {
   const [expanded, setExpanded] = React.useState(true)
-  const [_showTest, _setShowTest] = React.useState(false)
-  const [_showReview, _setShowReview] = React.useState(false)
 
   const getStatusBadge = () => {
     switch (run.status) {
@@ -88,7 +86,7 @@ export function RunCard({ run, onCopyCode, isCurrent }: RunCardProps) {
 
       {expanded && (
         <CardContent className="pt-0 space-y-4">
-          <AgentTrace run={run} onCopyCode={onCopyCode} />
+          <AgentTrace run={run} />
 
           <Separator />
 

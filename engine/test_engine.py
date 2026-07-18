@@ -32,7 +32,7 @@ def test_should_rework_loops_on_fail():
     }
     from graph import should_rework
 
-    assert should_rework(state) == "coder"
+    assert should_rework(state) == "planner"
 
 
 def test_should_rework_stops_at_max_iterations():

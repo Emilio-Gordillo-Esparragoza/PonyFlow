@@ -70,19 +70,26 @@ def run_pipeline(prompt: str, run_id: str):
         "iterations": 0,
     }
 
-    yield {"type": "agent_start", "agent": "planner", "run_id": run_id}
-    result = planner(state)
-    state.update(result)
-
-    yield {
-        "type": "agent_end",
-        "agent": "planner",
-        "output": state["plan"],
-        "run_id": run_id,
-    }
-
     max_iterations = PIPELINE.max_iterations
     while state.get("iterations", 0) < max_iterations:
+        if cancel_event.is_set():
+            yield {
+                "type": "run_error",
+                "run_id": run_id,
+                "error": "Cancelled by user",
+            }
+            break
+
+        yield {"type": "agent_start", "agent": "planner", "run_id": run_id}
+        result = planner(state)
+        state.update(result)
+        yield {
+            "type": "agent_end",
+            "agent": "planner",
+            "output": state["plan"],
+            "run_id": run_id,
+        }
+
         if cancel_event.is_set():
             yield {
                 "type": "run_error",

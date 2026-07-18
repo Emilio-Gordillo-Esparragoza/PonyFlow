@@ -34,10 +34,16 @@ def coder(state: AgentState) -> dict:
 
     code = full_response.strip()
     if "```" in code:
-        code = code.split("```")[1]
-        if code.startswith("python"):
-            code = code[6:]
-        code = code.strip()
+        parts = code.split("```")
+        if len(parts) >= 2:
+            fenced = parts[1]
+            if fenced.startswith("python"):
+                fenced = fenced[6:]
+            elif fenced.startswith("py"):
+                fenced = fenced[2:]
+            fenced = fenced.strip()
+            if fenced:
+                code = fenced
 
     yield {"type": "agent_end", "agent": "coder", "output": code}
     return {"code": code}

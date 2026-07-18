@@ -22,12 +22,12 @@ PonyFlow solves the problem of AI-assisted coding without sacrificing privacy or
 
 A single LLM call produces worse code than a pipeline of specialized agents. Each agent has a different model tuned for its task:
 
-- **Planner** (mistral): Structures the request into a JSON plan. Breaks down vague prompts into actionable steps.
+- **Planner** (mistral): Structures the request into a JSON plan. Breaks down vague prompts into actionable steps. On rework, revises the plan using test and review feedback.
 - **Coder** (llama3): Writes minimal Python code under Ponytail constraints. No fluff, no overengineering.
-- **Tester** (phi3): Executes the code and reports pass/fail with concrete suggestions.
+- **Tester** (phi3): Performs an LLM-based static check and reports pass/fail with concrete suggestions (does not execute the generated code).
 - **Reader** (mistral): Reviews for security issues, bad practices, and Ponytail violations.
 
-The Reader can send the Coder back for rework (loop, max 3 iterations). This separation of concerns catches bugs the Coder alone would miss — logic errors, security holes, over-engineered solutions.
+On fail, the Reader sends the run back to the **Planner** (loop, max 3 iterations) so the plan can be fixed before coding again. This separation of concerns catches bugs a single agent would miss — logic errors, security holes, over-engineered solutions.
 
 ---
 
@@ -50,22 +50,26 @@ This is enforced at the prompt level — the rules are prepended to every Coder 
 
 ## Architecture
 
-```
-┌─────────────┐     JSONL stdin/stdout      ┌──────────────────┐
-│  Tauri/Rust │ ◄─────────────────────────► │  Python Engine   │
-│  (Frontend) │                             │  (LangGraph)     │
-└─────────────┘                             └──────────────────┘
+```mermaid
+flowchart LR
+  Tauri["Tauri/Rust Frontend"] -->|"JSONL stdin/stdout"| Engine["Python Engine"]
+  Engine -->|"JSONL events"| Tauri
 ```
 
-The Rust backend is thin (≤300 lines) — process management only. It spawns the Python engine, relays JSONL over stdin/stdout, and handles health checks. All agent logic lives in Python.
+The Rust backend is thin (≤300 lines) — process management only. It spawns the Python engine, relays JSONL over stdin/stdout, and handles health checks. All agent logic lives in Python. The live iteration loop is in `engine/engine.py`; `engine/graph.py` provides the `should_rework` routing helper used by tests.
+
+Deeper notes and ADRs: [docs/](docs/).
 
 ### Agent Pipeline
 
-```
-Planner → Coder → Tester → Reader → (approve? → END | fail → Coder)
+```mermaid
+flowchart LR
+  Planner --> Coder --> Tester --> Reader
+  Reader -->|"approve"| EndNode[END]
+  Reader -->|"fail max 3"| Planner
 ```
 
-Max 3 iterations. Each arrow is a LangGraph edge with state passing.
+Max 3 iterations. On fail, control returns to the Planner with prior plan, code, test, and review context.
 
 ---
 
@@ -112,7 +116,7 @@ npm run tauri:dev
 
 This starts Vite (hot-reload frontend at `localhost:1420`) and launches the Tauri window with the Python engine spawned as a subprocess.
 
-> **Note:** GUI binaries will be available for download in future releases (Windows `.msi`, macOS `.dmg`, Linux `.AppImage` / `.deb`). For now, build from source using the steps above.
+> **Note:** Windows installers (`.msi`) ship with GitHub Releases (tags `v*`). macOS/Linux installers are not automated yet — build from source using the steps above.
 
 ---
 
@@ -129,14 +133,16 @@ ponyflow/
 │   ├── lib/             # Protocol types, engine bridge, utils
 │   └── hooks/           # useEngine hook
 ├── engine/              # Python engine (source of truth)
-│   ├── engine.py        # JSONL main loop
-│   ├── graph.py         # LangGraph pipeline definition
+│   ├── engine.py        # JSONL main loop (live pipeline)
+│   ├── graph.py         # should_rework routing helper
 │   ├── state.py         # AgentState TypedDict
-│   ├── agents/          # planner, coder, tester, reader (each ~20 lines)
+│   ├── agents/          # planner, coder, tester, reader
 │   │   └── skills/
 │   │       └── ponytail.md
 │   ├── utils/llm.py     # Ollama factory
+│   ├── ponyflow.spec    # PyInstaller spec
 │   └── requirements.txt
+├── docs/                # Architecture notes + ADRs
 ├── package.json
 └── README.md
 ```
@@ -172,14 +178,17 @@ Brief reference for the JSONL protocol between frontend and engine.
 ```bash
 # Build Python engine
 cd engine
-pyinstaller ponyflow.spec
+pip install -r requirements.txt
+python -m pyinstaller ponyflow.spec
 
 # Build Tauri app (bundles engine binary + frontend)
 cd ..
 npm run tauri:build
 ```
 
-Output: `src-tauri/target/release/bundle/`
+Output: `src-tauri/target/release/bundle/` (Windows MSI under `msi/`).
+
+Release automation: push an annotated tag matching `v*` (for example `v0.1.0`) to trigger `.github/workflows/build-windows.yml`, which uploads the MSI to a GitHub Release. See [docs/decisions/0002-windows-packaging.md](docs/decisions/0002-windows-packaging.md).
 
 ---
 
