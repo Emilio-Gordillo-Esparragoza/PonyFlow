@@ -12,9 +12,9 @@ The Windows CI workflow freezes the Python engine with PyInstaller, then bundles
 
 - Commit [`engine/ponyflow.spec`](../../engine/ponyflow.spec) and stop blanket-ignoring `*.spec` in `.gitignore`.
 - Declare `pyinstaller` in [`engine/requirements.txt`](../../engine/requirements.txt).
-- Freeze the engine as `ponyflow-engine` (with Ponytail skill data under `engine/agents/skills/`).
-- Tauri bundles `../engine/dist/ponyflow-engine*` as a resource.
-- Pushing tags matching `v*` runs `.github/workflows/build-windows.yml`, which creates a GitHub Release and attaches the MSI.
+- Freeze the engine as `ponyflow-engine` (with Ponytail skill data under `engine/agents/skills/`) via `python -m PyInstaller ponyflow.spec`.
+- Stage `engine/dist/ponyflow-engine.exe` into `src-tauri/resources/` before the Tauri build so the resource path is stable on CI.
+- Tauri bundles MSI and NSIS installers; tags matching `v*` attach those artifacts to a GitHub Release.
 
 ## Consequences
 

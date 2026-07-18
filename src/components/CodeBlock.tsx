@@ -5,7 +5,6 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Copy, Check, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { invoke } from '@tauri-apps/api/core'
 
 interface CodeBlockProps {
   code: string
@@ -25,11 +24,13 @@ export function CodeBlock({ code, language = 'python', onCopy }: CodeBlockProps)
 
   const handleSave = async () => {
     try {
-      await invoke('dialog:save', {
-        filters: [{ name: 'Python', extensions: ['py'] }],
-        defaultPath: 'generated_code.py',
-        title: 'Save generated code',
-      })
+      const blob = new Blob([code], { type: 'text/x-python' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'generated_code.py'
+      a.click()
+      URL.revokeObjectURL(url)
     } catch (e) {
       console.error('Save failed:', e)
     }

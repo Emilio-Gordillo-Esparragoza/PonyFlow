@@ -11,6 +11,7 @@ engine/venv/
 dist/
 build/
 src-tauri/target/
+src-tauri/resources/
 engine/dist/
 engine/build/
 # Ignore generated PyInstaller specs; keep the committed engine/ponyflow.spec

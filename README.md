@@ -179,7 +179,7 @@ Brief reference for the JSONL protocol between frontend and engine.
 # Build Python engine
 cd engine
 pip install -r requirements.txt
-python -m pyinstaller ponyflow.spec
+python -m PyInstaller ponyflow.spec --noconfirm
 
 # Build Tauri app (bundles engine binary + frontend)
 cd ..
