@@ -38,14 +38,15 @@ impl PythonEngine {
 
         let stdout = child.stdout.take().unwrap();
         let stderr = child.stderr.take().unwrap();
-        let app_handle = app.clone();
+        let app_handle_stdout = app.clone();
+        let app_handle_stderr = app.clone();
 
         std::thread::spawn(move || {
             let reader = BufReader::new(stdout);
             for line in reader.lines() {
                 if let Ok(line) = line {
                     if !line.trim().is_empty() {
-                        let _ = app_handle.emit("python:output", line);
+                        let _ = app_handle_stdout.emit("python:output", line);
                     }
                 }
             }
@@ -56,7 +57,7 @@ impl PythonEngine {
             for line in reader.lines() {
                 if let Ok(line) = line {
                     if !line.trim().is_empty() {
-                        let _ = app_handle.emit("python:error", line);
+                        let _ = app_handle_stderr.emit("python:error", line);
                     }
                 }
             }
@@ -87,8 +88,8 @@ impl PythonEngine {
     }
 
     fn is_alive(&self) -> bool {
-        let process_guard = self.process.lock().unwrap();
-        if let Some(child) = process_guard.as_ref() {
+        let mut process_guard = self.process.lock().unwrap();
+        if let Some(child) = process_guard.as_mut() {
             child.try_wait().unwrap().is_none()
         } else {
             false
