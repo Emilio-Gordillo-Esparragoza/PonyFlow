@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
@@ -24,6 +25,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
   --card: 222.2 84% 4.9%;
@@ -79,4 +81,20 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background-color: hsl(var(--muted-foreground) / 0.3);
   border-radius: 3px;
+}
+
+/* Native select menus must set option colors explicitly (OS popups ignore parent theme) */
+.theme-select {
+  color: hsl(var(--foreground));
+  background-color: transparent;
+}
+
+.theme-select option {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.dark .theme-select option {
+  background-color: #0a0a0a;
+  color: #ffffff;
 }
