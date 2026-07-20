@@ -57,11 +57,13 @@ export const useSkillsStore = create<SkillsStore>()(
     {
       name: 'ponyflow-skills',
       merge: (persisted, current) => {
-        const stored = (persisted as SkillsStore | undefined)?.skills ?? []
+        const stored =
+          persisted && typeof persisted === 'object' && 'skills' in persisted
+            ? ((persisted as { skills?: Skill[] }).skills ?? [])
+            : []
         const custom = stored.filter((s) => !s.builtin)
         return {
           ...current,
-          ...persisted,
           skills: [...BUILTIN_SKILLS, ...custom],
         }
       },
